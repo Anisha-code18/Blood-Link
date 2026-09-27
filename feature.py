@@ -4,8 +4,8 @@ from math import radians, sin, cos, sqrt, atan2
 
 # ─── Load Datasets ─────────────────────────────────────────────────
 
-donors_df = pd.read_csv("/mnt/user-data/outputs/donors.csv")
-recipients_df = pd.read_csv("/mnt/user-data/outputs/recipients.csv")
+donors_df = pd.read_csv("donors.csv")
+recipients_df = pd.read_csv("recipients.csv")
 
 # ─── Blood Compatibility Rules ─────────────────────────────────────
 
@@ -84,7 +84,7 @@ for _, recipient in recipients_df.iterrows():
 # ─── Save to CSV ───────────────────────────────────────────────────
 
 pairs_df = pd.DataFrame(pairs)
-pairs_df.to_csv("/mnt/user-data/outputs/feature_engineered.csv", index=False)
+pairs_df.to_csv("feature_engineered.csv", index=False)
 
 print("=" * 55)
 print("  FEATURE ENGINEERED DATASET")

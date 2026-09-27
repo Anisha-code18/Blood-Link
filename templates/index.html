@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BloodLink — Donor Matching System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f7f7f7;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #c0392b;
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header h1 { font-size: 1.6rem; }
+        header span { font-size: 1.8rem; }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            color: #c0392b;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group select,
+        .form-group input {
+            padding: 10px 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: #c0392b;
+        }
+
+        .btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #a93226; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead tr {
+            background: #c0392b;
+            color: white;
+        }
+
+        thead th {
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        tbody tr:nth-child(even) { background: #fdf2f2; }
+        tbody tr:hover { background: #fce4e4; }
+
+        tbody td {
+            padding: 11px 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .score {
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .rank {
+            font-weight: 700;
+            color: #c0392b;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-size: 0.95rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #fdecea;
+            color: #c0392b;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span>🩸</span>
+    <h1>BloodLink — Donor Matching System</h1>
+</header>
+
+<div class="container">
+
+    <!-- Search Form -->
+    <div class="card">
+        <h2>Patient Details</h2>
+        <form method="POST" action="/">
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Blood Type</label>
+                    <select name="blood_type">
+                        {% for bt in ["A", "B", "AB", "O"] %}
+                        <option value="{{ bt }}"
+                            {% if selected.get("blood_type") == bt %}selected{% endif %}>
+                            {{ bt }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Rh Factor</label>
+                    <select name="rh_factor">
+                        <option value="+" {% if selected.get("rh_factor") == "+" %}selected{% endif %}>Positive (+)</option>
+                        <option value="-" {% if selected.get("rh_factor") == "-" %}selected{% endif %}>Negative (-)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>City</label>
+                    <select name="city">
+                        {% for city in cities %}
+                        <option value="{{ city }}"
+                            {% if selected.get("city") == city %}selected{% endif %}>
+                            {{ city }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Urgency Score (1 - 10)</label>
+                    <input type="number" name="urgency_score"
+                           min="1" max="10"
+                           value="{{ selected.get('urgency_score', '') }}"
+                           placeholder="e.g. 9">
+                </div>
+
+            </div>
+            <button class="btn" type="submit">🔍 Find Best Donors</button>
+        </form>
+    </div>
+
+    <!-- Results -->
+    {% if results is not none %}
+    <div class="card">
+        <h2>Top Matching Donors</h2>
+        {% if results %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Donor ID</th>
+                    <th>Blood Type</th>
+                    <th>City</th>
+                    <th>Distance</th>
+                    <th>Days Since Donation</th>
+                    <th>Match Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for donor in results %}
+                <tr>
+                    <td class="rank">#{{ loop.index }}</td>
+                    <td><span class="badge">{{ donor.donor_id }}</span></td>
+                    <td>{{ donor.blood_type }}</td>
+                    <td>{{ donor.city }}</td>
+                    <td>{{ donor.distance_km }} km</td>
+                    <td>{{ donor.days_since_donation }} days</td>
+                    <td class="score">{{ donor.match_score }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-results">No compatible donors found for this patient.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+</body>
+</html>
